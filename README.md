@@ -1,4 +1,5 @@
 # postmortem
+[![GoDoc](https://godoc.org/github.com/jbowens/postmortem?status.svg)](https://godoc.org/github.com/jbowens/postmortem)
 
 An attempt to collect data surrounding the 2016 Presidential Election and make
 it more accessible.
