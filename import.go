@@ -2,8 +2,10 @@ package postmortem
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -22,7 +24,7 @@ type County struct {
 	ID    string `json:"id"`
 	State string `json:"state"`
 	Name  string `json:"name"`
-	RecNo string `json:"record_number"` // lolwat
+	RecNo int    `json:"record_number"` // lolwat
 }
 
 // ReadCounties reads all of the counties out of the American
@@ -56,11 +58,15 @@ func ReadCounties(acsPath string) ([]County, error) {
 			if rec[geographyTypeIdx] != geographyTypeCounty {
 				continue
 			}
+			recNo, err := strconv.Atoi(rec[geographyRecNoIdx])
+			if err != nil {
+				return fmt.Errorf("invalid rec no: %q for geo %s", rec[geographyRecNoIdx], rec[geographyIDIdx])
+			}
 			counties = append(counties, County{
 				ID:    rec[geographyIDIdx],
 				State: rec[geographyStateIdx],
 				Name:  strings.SplitN(rec[geographyNameIdx], ",", 2)[0],
-				RecNo: rec[geographyRecNoIdx],
+				RecNo: recNo,
 			})
 		}
 		return nil
