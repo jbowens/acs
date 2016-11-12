@@ -88,7 +88,7 @@ var sequenceMappings = []dataTable{
 
 // importACS imports the provided data tables for the provided counties.
 // It returns a map from GeoID to a list of the hydrated table structs.
-func importACS(counties []County, dataTables ...dataTable) (map[string][]interface{}, error) {
+func importACS(dir string, counties []County, dataTables ...dataTable) (map[string][]interface{}, error) {
 	results := map[string][]interface{}{}
 	byState := map[string][]County{}
 	for _, c := range counties {
@@ -104,7 +104,7 @@ func importACS(counties []County, dataTables ...dataTable) (map[string][]interfa
 
 	for stateID, stateCounties := range byState {
 		for seq, tables := range tblsBySeq {
-			filename := fmt.Sprintf("e20151%s%s000.txt", stateID, seq)
+			filename := filepath.Join(dir, fmt.Sprintf("e20151%s%s000.txt", stateID, seq))
 			f, err := os.Open(filename)
 			if err != nil {
 				return nil, fmt.Errorf("error opening '%s': %s", filename, err)
@@ -125,7 +125,7 @@ func importACS(counties []County, dataTables ...dataTable) (map[string][]interfa
 			for _, county := range stateCounties {
 				rec := records[county.RecNo]
 				for _, tbl := range tables {
-					v, err := parseSequence(tbl, rec[tbl.offset:(tbl.offset+tbl.count)])
+					v, err := parseSequence(tbl, rec[tbl.offset-1:(tbl.offset-1+tbl.count)])
 					if err != nil {
 						return nil, err
 					}

@@ -39,3 +39,25 @@ func TestParseSequence(t *testing.T) {
 		t.Errorf("got=%#v want=%#v", v, want)
 	}
 }
+
+func TestImportACS(t *testing.T) {
+	foodStampsTbl := dataTable{
+		typ:    FoodStamps{},
+		tbl:    "C22001",
+		seq:    "0094",
+		offset: 128,
+		count:  3,
+	}
+
+	prov := County{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10}
+	results, err := importACS("test_data/acsri", []County{prov}, foodStampsTbl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string][]interface{}{
+		"05000US44007": []interface{}{&FoodStamps{Total: 49555, Yes: 3977, No: 45578}},
+	}
+	if !reflect.DeepEqual(results, want) {
+		t.Errorf("got=%#v, want=%#v", results, want)
+	}
+}
