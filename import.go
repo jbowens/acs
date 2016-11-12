@@ -20,9 +20,9 @@ const (
 	geographyTypeCounty = "050"
 )
 
-// ReadCounties reads all of the counties out of the American
+// ImportCounties reads all of the counties out of the American
 // Community Survey (ACS) geography files in the provided directory.
-func ReadCounties(acsPath string) ([]County, error) {
+func ImportCounties(acsPath string) ([]County, error) {
 	var counties []County
 
 	err := filepath.Walk(acsPath, func(path string, info os.FileInfo, err error) error {
@@ -84,6 +84,35 @@ var sequenceMappings = []dataTable{
 		offset: 128,
 		count:  3,
 	},
+}
+
+// ImportACS imports all supported American Community Survey (ACS) statistics
+// for the provided counties.
+func ImportACS(dir string, counties []County) (map[County]*ACSStatistics, error) {
+	allResults, err := importACS(dir, counties, sequenceMappings...)
+	if err != nil {
+		return nil, err
+	}
+
+	countyByID := map[string]County{}
+	for _, c := range counties {
+		countyByID[c.ID] = c
+	}
+
+	m := make(map[County]*ACSStatistics, len(counties))
+	for id, results := range allResults {
+		stats := new(ACSStatistics)
+		for _, res := range results {
+			switch v := res.(type) {
+			case *FoodStamps:
+				stats.FoodStamps = v
+			default:
+				return nil, fmt.Errorf("unexpected %T", res)
+			}
+		}
+		m[countyByID[id]] = stats
+	}
+	return m, nil
 }
 
 // importACS imports the provided data tables for the provided counties.

@@ -17,14 +17,21 @@ func main() {
 	}
 	acsPath := args[0]
 
-	counties, err := postmortem.ReadCounties(acsPath)
+	counties, err := postmortem.ImportCounties(acsPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading acs data: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "error reading acs geo data: %s", err.Error())
+		os.Exit(1)
+	}
+
+	results, err := postmortem.ImportACS(acsPath, counties)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error reading acs estimate data: %s", err.Error())
 		os.Exit(1)
 	}
 
 	// Just print the counties to stdout for now.
-	for _, county := range counties {
-		fmt.Printf("%s — %s — %s\n", county.ID, county.State, county.Name)
+	for county, stats := range results {
+		foodStampsPct := 100.0 * (float64(stats.FoodStamps.Yes) / float64(stats.FoodStamps.Total))
+		fmt.Printf("%s (%s) — %.2f\n", county.Name, county.State, foodStampsPct)
 	}
 }

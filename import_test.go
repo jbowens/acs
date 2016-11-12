@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestReadCounties(t *testing.T) {
-	counties, err := ReadCounties("test_data/acsgeos")
+func TestImportCounties(t *testing.T) {
+	counties, err := ImportCounties("test_data/acsgeos")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,7 +17,7 @@ func TestReadCounties(t *testing.T) {
 		{ID: "05000US44009", State: "RI", Name: "Washington County", RecNo: 11},
 	}
 	if !reflect.DeepEqual(counties, want) {
-		t.Errorf("ReadCounties(): got:\n%#v\nwant:\n%#v", counties, want)
+		t.Errorf("ImportCounties(): got:\n%#v\nwant:\n%#v", counties, want)
 	}
 }
 

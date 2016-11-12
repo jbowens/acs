@@ -8,6 +8,12 @@ type County struct {
 	RecNo int    `json:"record_number"` // lolwat
 }
 
+// ACSStatistics aggregates various statistics about a geography
+// collected from the American Community Survey.
+type ACSStatistics struct {
+	FoodStamps *FoodStamps `json:"food_stamps"`
+}
+
 // FoodStamps describes statistics about households receiving
 // food stamps within the past 12 months.
 type FoodStamps struct {
