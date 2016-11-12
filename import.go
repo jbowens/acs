@@ -10,6 +10,7 @@ import (
 const (
 	geographyStateIdx = 1
 	geographyTypeIdx  = 2
+	geographyRecNoIdx = 4
 	geographyIDIdx    = 48
 	geographyNameIdx  = 49
 
@@ -21,6 +22,7 @@ type County struct {
 	ID    string `json:"id"`
 	State string `json:"state"`
 	Name  string `json:"name"`
+	RecNo string `json:"record_number"` // lolwat
 }
 
 // ReadCounties reads all of the counties out of the American
@@ -58,6 +60,7 @@ func ReadCounties(acsPath string) ([]County, error) {
 				ID:    rec[geographyIDIdx],
 				State: rec[geographyStateIdx],
 				Name:  strings.SplitN(rec[geographyNameIdx], ",", 2)[0],
+				RecNo: rec[geographyRecNoIdx],
 			})
 		}
 		return nil

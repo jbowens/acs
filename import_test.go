@@ -11,10 +11,10 @@ func TestReadCounties(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []County{
-		{ID: "05000US44003", State: "RI", Name: "Kent County"},
-		{ID: "05000US44005", State: "RI", Name: "Newport County"},
-		{ID: "05000US44007", State: "RI", Name: "Providence County"},
-		{ID: "05000US44009", State: "RI", Name: "Washington County"},
+		{ID: "05000US44003", State: "RI", Name: "Kent County", RecNo: "0000008"},
+		{ID: "05000US44005", State: "RI", Name: "Newport County", RecNo: "0000009"},
+		{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: "0000010"},
+		{ID: "05000US44009", State: "RI", Name: "Washington County", RecNo: "0000011"},
 	}
 	if !reflect.DeepEqual(counties, want) {
 		t.Errorf("ReadCounties(): got:\n%#v\nwant:\n%#v", counties, want)
