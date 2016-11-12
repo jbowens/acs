@@ -20,3 +20,22 @@ func TestReadCounties(t *testing.T) {
 		t.Errorf("ReadCounties(): got:\n%#v\nwant:\n%#v", counties, want)
 	}
 }
+
+func TestParseSequence(t *testing.T) {
+	exampleTbl := dataTable{
+		typ:    FoodStamps{},
+		tbl:    "C22001",
+		seq:    "0094",
+		offset: 0,
+		count:  3,
+	}
+
+	v, err := parseSequence(exampleTbl, []string{"5", "3", "2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &FoodStamps{Total: 5, Yes: 3, No: 2}
+	if !reflect.DeepEqual(v, want) {
+		t.Errorf("got=%#v want=%#v", v, want)
+	}
+}

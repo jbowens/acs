@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -18,14 +19,6 @@ const (
 
 	geographyTypeCounty = "050"
 )
-
-// County represents an individual United States county.
-type County struct {
-	ID    string `json:"id"`
-	State string `json:"state"`
-	Name  string `json:"name"`
-	RecNo int    `json:"record_number"` // lolwat
-}
 
 // ReadCounties reads all of the counties out of the American
 // Community Survey (ACS) geography files in the provided directory.
@@ -50,6 +43,7 @@ func ReadCounties(acsPath string) ([]County, error) {
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 		recs, err := csv.NewReader(f).ReadAll()
 		if err != nil {
 			return err
@@ -72,4 +66,97 @@ func ReadCounties(acsPath string) ([]County, error) {
 		return nil
 	})
 	return counties, err
+}
+
+type dataTable struct {
+	typ    interface{}
+	tbl    string
+	seq    string
+	offset int
+	count  int
+}
+
+var sequenceMappings = []dataTable{
+	{
+		typ:    FoodStamps{},
+		tbl:    "C22001",
+		seq:    "0094",
+		offset: 128,
+		count:  3,
+	},
+}
+
+// importACS imports the provided data tables for the provided counties.
+// It returns a map from GeoID to a list of the hydrated table structs.
+func importACS(counties []County, dataTables ...dataTable) (map[string][]interface{}, error) {
+	results := map[string][]interface{}{}
+	byState := map[string][]County{}
+	for _, c := range counties {
+		stateID := strings.ToLower(c.State)
+		byState[stateID] = append(byState[stateID], c)
+		results[c.ID] = make([]interface{}, 0, len(dataTables))
+	}
+
+	tblsBySeq := map[string][]dataTable{}
+	for _, tbl := range dataTables {
+		tblsBySeq[tbl.seq] = append(tblsBySeq[tbl.seq], tbl)
+	}
+
+	for stateID, stateCounties := range byState {
+		for seq, tables := range tblsBySeq {
+			filename := fmt.Sprintf("e20151%s%s000.txt", stateID, seq)
+			f, err := os.Open(filename)
+			if err != nil {
+				return nil, fmt.Errorf("error opening '%s': %s", filename, err)
+			}
+
+			// Read the entire file into memory.
+			records, err := csv.NewReader(f).ReadAll()
+			if err != nil {
+				f.Close()
+				return nil, err
+			}
+			err = f.Close()
+			if err != nil {
+				return nil, err
+			}
+
+			// For each county, extract the county's record and hydrate the relevant types.
+			for _, county := range stateCounties {
+				rec := records[county.RecNo]
+				for _, tbl := range tables {
+					v, err := parseSequence(tbl, rec[tbl.offset:(tbl.offset+tbl.count)])
+					if err != nil {
+						return nil, err
+					}
+					results[county.ID] = append(results[county.ID], v)
+				}
+			}
+		}
+	}
+	return results, nil
+}
+
+func parseSequence(tbl dataTable, rec []string) (interface{}, error) {
+	if tbl.count != len(rec) {
+		fmt.Errorf("table expects %d fields, got %d", tbl.count, len(rec))
+	}
+	typ := reflect.TypeOf(tbl.typ)
+	if typ.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("expected struct type; got %T", tbl.typ)
+	}
+	if typ.NumField() != tbl.count {
+		return nil, fmt.Errorf("struct has %d fields, table expects %d", typ.NumField(), tbl.count)
+	}
+
+	v := reflect.New(typ)
+	structV := v.Elem()
+	for i := 0; i < tbl.count; i++ {
+		num, err := strconv.Atoi(rec[i])
+		if err != nil {
+			return nil, err
+		}
+		structV.Field(i).SetInt(int64(num))
+	}
+	return v.Interface(), nil
 }
