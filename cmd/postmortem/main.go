@@ -18,27 +18,35 @@ func main() {
 	}
 	acsPath := args[0]
 
-	counties, err := postmortem.ImportCounties(acsPath)
+	states, err := postmortem.ImportStates(acsPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading acs geo data: %s", err.Error())
 		os.Exit(1)
 	}
 
-	results, err := postmortem.ImportACS(acsPath, counties)
+	var geos []postmortem.Geography
+	for _, s := range states {
+		geos = append(geos, s)
+		for _, c := range s.Counties {
+			geos = append(geos, c)
+		}
+	}
+
+	results, err := postmortem.ImportACS(acsPath, geos)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading acs estimate data: %s", err.Error())
 		os.Exit(1)
 	}
 
-	sum := 0
 	stateReps := map[string]int{}
 	statePopulations := map[string]int{}
-	for county, stats := range results {
-		if county.State == "PR" || county.State == "DC" {
+	for _, state := range states {
+		if state.Abbrev == "PR" || state.Abbrev == "DC" {
 			continue
 		}
-		sum += stats.TotalPopulation.Total
-		statePopulations[county.State] = statePopulations[county.State] + stats.TotalPopulation.Total
+
+		stats := results[state.ID]
+		statePopulations[state.Abbrev] = stats.TotalPopulation.Total
 	}
 
 	representatives := 435

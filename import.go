@@ -67,7 +67,7 @@ func ImportStates(acsPath string) ([]*State, error) {
 			}
 			if rec[geographyTypeIdx] == geographyTypeCounty {
 				state := rec[geographyStateIdx]
-				states[state].Counties = append(states[state].Counties, County{
+				states[state].Counties = append(states[state].Counties, &County{
 					ID:    rec[geographyIDIdx],
 					State: rec[geographyStateIdx],
 					Name:  strings.SplitN(rec[geographyNameIdx], ",", 2)[0],
@@ -111,19 +111,14 @@ var sequenceMappings = []dataTable{
 }
 
 // ImportACS imports all supported American Community Survey (ACS) statistics
-// for the provided counties.
-func ImportACS(dir string, counties []County) (map[County]*ACSStatistics, error) {
-	allResults, err := importACS(dir, counties, sequenceMappings...)
+// for the provided geographies.
+func ImportACS(dir string, geographies []Geography) (map[string]*ACSStatistics, error) {
+	allResults, err := importACS(dir, geographies, sequenceMappings...)
 	if err != nil {
 		return nil, err
 	}
 
-	countyByID := map[string]County{}
-	for _, c := range counties {
-		countyByID[c.ID] = c
-	}
-
-	m := make(map[County]*ACSStatistics, len(counties))
+	m := make(map[string]*ACSStatistics, len(geographies))
 	for id, results := range allResults {
 		stats := new(ACSStatistics)
 		for _, res := range results {
@@ -136,20 +131,20 @@ func ImportACS(dir string, counties []County) (map[County]*ACSStatistics, error)
 				return nil, fmt.Errorf("unexpected %T", res)
 			}
 		}
-		m[countyByID[id]] = stats
+		m[id] = stats
 	}
 	return m, nil
 }
 
-// importACS imports the provided data tables for the provided counties.
+// importACS imports the provided data tables for the provided geos.
 // It returns a map from GeoID to a list of the hydrated table structs.
-func importACS(dir string, counties []County, dataTables ...dataTable) (map[string][]interface{}, error) {
+func importACS(dir string, geographies []Geography, dataTables ...dataTable) (map[string][]interface{}, error) {
 	results := map[string][]interface{}{}
-	byState := map[string][]County{}
-	for _, c := range counties {
-		stateID := strings.ToLower(c.State)
-		byState[stateID] = append(byState[stateID], c)
-		results[c.ID] = make([]interface{}, 0, len(dataTables))
+	byState := map[string][]Geography{}
+	for _, g := range geographies {
+		stateID := strings.ToLower(g.StateID())
+		byState[stateID] = append(byState[stateID], g)
+		results[g.GeoID()] = make([]interface{}, 0, len(dataTables))
 	}
 
 	tblsBySeq := map[string][]dataTable{}
@@ -176,15 +171,15 @@ func importACS(dir string, counties []County, dataTables ...dataTable) (map[stri
 				return nil, err
 			}
 
-			// For each county, extract the county's record and hydrate the relevant types.
-			for _, county := range stateCounties {
-				rec := records[county.RecNo]
+			// For each geo, extract the geo's record and hydrate the relevant types.
+			for _, geo := range stateCounties {
+				rec := records[geo.RecordNo()]
 				for _, tbl := range tables {
 					v, err := parseSequence(tbl, rec[tbl.offset-1:(tbl.offset-1+tbl.count)])
 					if err != nil {
 						return nil, err
 					}
-					results[county.ID] = append(results[county.ID], v)
+					results[geo.GeoID()] = append(results[geo.GeoID()], v)
 				}
 			}
 		}

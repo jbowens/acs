@@ -16,7 +16,7 @@ func TestImportStates(t *testing.T) {
 			Abbrev: "RI",
 			Name:   "Rhode Island",
 			RecNo:  1,
-			Counties: []County{
+			Counties: []*County{
 				{ID: "05000US44003", State: "RI", Name: "Kent County", RecNo: 8},
 				{ID: "05000US44005", State: "RI", Name: "Newport County", RecNo: 9},
 				{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10},
@@ -57,8 +57,8 @@ func TestImportACS(t *testing.T) {
 		count:  3,
 	}
 
-	prov := County{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10}
-	results, err := importACS("test_data/acsri", []County{prov}, foodStampsTbl)
+	prov := &County{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10}
+	results, err := importACS("test_data/acsri", []Geography{prov}, foodStampsTbl)
 	if err != nil {
 		t.Fatal(err)
 	}

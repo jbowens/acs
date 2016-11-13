@@ -1,13 +1,23 @@
 package postmortem
 
+type Geography interface {
+	GeoID() string
+	StateID() string
+	RecordNo() int
+}
+
 // State represents an individual United States state.
 type State struct {
-	ID       string   `json:"id"`
-	Abbrev   string   `json:"state"`
-	Name     string   `json:"name"`
-	RecNo    int      `json:"record_number"`
-	Counties []County `json:"counties"`
+	ID       string    `json:"id"`
+	Abbrev   string    `json:"state"`
+	Name     string    `json:"name"`
+	RecNo    int       `json:"record_number"`
+	Counties []*County `json:"counties"`
 }
+
+func (s *State) GeoID() string   { return s.ID }
+func (s *State) StateID() string { return s.Abbrev }
+func (s *State) RecordNo() int   { return s.RecNo }
 
 // County represents an individual United States county.
 type County struct {
@@ -16,6 +26,10 @@ type County struct {
 	Name  string `json:"name"`
 	RecNo int    `json:"record_number"`
 }
+
+func (c *County) GeoID() string   { return c.ID }
+func (c *County) StateID() string { return c.State }
+func (c *County) RecordNo() int   { return c.RecNo }
 
 // ACSStatistics aggregates various statistics about a geography
 // collected from the American Community Survey.
