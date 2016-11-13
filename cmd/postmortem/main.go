@@ -29,9 +29,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Just print the counties to stdout for now.
+	// Just print the state population estimates to stdout for now.
+	statePopulations := map[string]int{}
 	for county, stats := range results {
-		foodStampsPct := 100.0 * (float64(stats.FoodStamps.Yes) / float64(stats.FoodStamps.Total))
-		fmt.Printf("%s (%s) — %.2f\n", county.Name, county.State, foodStampsPct)
+		statePopulations[county.State] = statePopulations[county.State] + stats.TotalPopulation.Total
+	}
+	for state, pop := range statePopulations {
+		fmt.Printf("%s — %d\n", state, pop)
 	}
 }

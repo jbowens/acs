@@ -78,6 +78,13 @@ type dataTable struct {
 
 var sequenceMappings = []dataTable{
 	{
+		typ:    TotalPopulation{},
+		tbl:    "B01003",
+		seq:    "0003",
+		offset: 130,
+		count:  1,
+	},
+	{
 		typ:    FoodStamps{},
 		tbl:    "C22001",
 		seq:    "0094",
@@ -106,6 +113,8 @@ func ImportACS(dir string, counties []County) (map[County]*ACSStatistics, error)
 			switch v := res.(type) {
 			case *FoodStamps:
 				stats.FoodStamps = v
+			case *TotalPopulation:
+				stats.TotalPopulation = v
 			default:
 				return nil, fmt.Errorf("unexpected %T", res)
 			}

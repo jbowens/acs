@@ -11,7 +11,14 @@ type County struct {
 // ACSStatistics aggregates various statistics about a geography
 // collected from the American Community Survey.
 type ACSStatistics struct {
-	FoodStamps *FoodStamps `json:"food_stamps"`
+	TotalPopulation *TotalPopulation `json:"total_population"`
+	FoodStamps      *FoodStamps      `json:"food_stamps"`
+}
+
+// TotalPopulation provides an estimate of the total population
+// living within a geography.
+type TotalPopulation struct {
+	Total int `json:"total"`
 }
 
 // FoodStamps describes statistics about households receiving
