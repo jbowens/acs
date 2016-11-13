@@ -5,19 +5,27 @@ import (
 	"testing"
 )
 
-func TestImportCounties(t *testing.T) {
-	counties, err := ImportCounties("test_data/acsgeos")
+func TestImportStates(t *testing.T) {
+	states, err := ImportStates("test_data/acsgeos")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []County{
-		{ID: "05000US44003", State: "RI", Name: "Kent County", RecNo: 8},
-		{ID: "05000US44005", State: "RI", Name: "Newport County", RecNo: 9},
-		{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10},
-		{ID: "05000US44009", State: "RI", Name: "Washington County", RecNo: 11},
+	want := []*State{
+		&State{
+			ID:     "04000US44",
+			Abbrev: "RI",
+			Name:   "Rhode Island",
+			RecNo:  1,
+			Counties: []County{
+				{ID: "05000US44003", State: "RI", Name: "Kent County", RecNo: 8},
+				{ID: "05000US44005", State: "RI", Name: "Newport County", RecNo: 9},
+				{ID: "05000US44007", State: "RI", Name: "Providence County", RecNo: 10},
+				{ID: "05000US44009", State: "RI", Name: "Washington County", RecNo: 11},
+			},
+		},
 	}
-	if !reflect.DeepEqual(counties, want) {
-		t.Errorf("ImportCounties(): got:\n%#v\nwant:\n%#v", counties, want)
+	if !reflect.DeepEqual(states, want) {
+		t.Errorf("ImportStates(): got:\n%#v\nwant:\n%#v", states, want)
 	}
 }
 

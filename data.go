@@ -1,11 +1,20 @@
 package postmortem
 
+// State represents an individual United States state.
+type State struct {
+	ID       string   `json:"id"`
+	Abbrev   string   `json:"state"`
+	Name     string   `json:"name"`
+	RecNo    int      `json:"record_number"`
+	Counties []County `json:"counties"`
+}
+
 // County represents an individual United States county.
 type County struct {
 	ID    string `json:"id"`
 	State string `json:"state"`
 	Name  string `json:"name"`
-	RecNo int    `json:"record_number"` // lolwat
+	RecNo int    `json:"record_number"`
 }
 
 // ACSStatistics aggregates various statistics about a geography

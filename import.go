@@ -11,19 +11,22 @@ import (
 )
 
 const (
-	geographyStateIdx = 1
-	geographyTypeIdx  = 2
-	geographyRecNoIdx = 4
-	geographyIDIdx    = 48
-	geographyNameIdx  = 49
+	geographyStateIdx     = 1
+	geographyTypeIdx      = 2
+	geographyComponentIdx = 3
+	geographyRecNoIdx     = 4
+	geographyIDIdx        = 48
+	geographyNameIdx      = 49
 
-	geographyTypeCounty = "050"
+	geographyTypeCounty    = "050"
+	geographyTypeState     = "040"
+	geographyComponentNone = "00"
 )
 
-// ImportCounties reads all of the counties out of the American
+// ImportStates reads all of the states out of the American
 // Community Survey (ACS) geography files in the provided directory.
-func ImportCounties(acsPath string) ([]County, error) {
-	var counties []County
+func ImportStates(acsPath string) ([]*State, error) {
+	states := map[string]*State{}
 
 	err := filepath.Walk(acsPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -49,23 +52,37 @@ func ImportCounties(acsPath string) ([]County, error) {
 			return err
 		}
 		for _, rec := range recs {
-			if rec[geographyTypeIdx] != geographyTypeCounty {
-				continue
-			}
 			recNo, err := strconv.Atoi(rec[geographyRecNoIdx])
 			if err != nil {
 				return fmt.Errorf("invalid rec no: %q for geo %s", rec[geographyRecNoIdx], rec[geographyIDIdx])
 			}
-			counties = append(counties, County{
-				ID:    rec[geographyIDIdx],
-				State: rec[geographyStateIdx],
-				Name:  strings.SplitN(rec[geographyNameIdx], ",", 2)[0],
-				RecNo: recNo,
-			})
+			if rec[geographyTypeIdx] == geographyTypeState && rec[geographyComponentIdx] == geographyComponentNone {
+				state := rec[geographyStateIdx]
+				states[state] = &State{
+					ID:     rec[geographyIDIdx],
+					Abbrev: rec[geographyStateIdx],
+					Name:   rec[geographyNameIdx],
+					RecNo:  recNo,
+				}
+			}
+			if rec[geographyTypeIdx] == geographyTypeCounty {
+				state := rec[geographyStateIdx]
+				states[state].Counties = append(states[state].Counties, County{
+					ID:    rec[geographyIDIdx],
+					State: rec[geographyStateIdx],
+					Name:  strings.SplitN(rec[geographyNameIdx], ",", 2)[0],
+					RecNo: recNo,
+				})
+			}
 		}
 		return nil
 	})
-	return counties, err
+
+	var statesSlice []*State
+	for _, state := range states {
+		statesSlice = append(statesSlice, state)
+	}
+	return statesSlice, err
 }
 
 type dataTable struct {
